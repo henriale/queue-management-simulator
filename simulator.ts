@@ -14,7 +14,7 @@ export class Simulator {
     }
 
     step(i) {
-        console.log(`========= round: ${i} =========`)
+        console.log(`Round: ${i}`)
 
         const event = this.scheduler.next()
         const events = event.execute()

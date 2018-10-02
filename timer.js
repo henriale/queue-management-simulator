@@ -7,7 +7,7 @@ var Timer = /** @class */ (function () {
         var queue = Timer.queues[queueName] = Timer.queues[queueName] || [];
         var delta = amount - this.global;
         queue[index] = (queue[index] || 0) + delta;
-        console.log("global time: " + this.global + ", actual time: " + amount);
+        console.log("[Global time: " + this.global + " | Actual time: " + amount + "]");
         this.global += delta;
     };
     Timer.getGlobal = function () {

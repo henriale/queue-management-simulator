@@ -11,7 +11,7 @@ var Simulator = /** @class */ (function () {
         random_1.PseudoRandom.init(randoms);
     }
     Simulator.prototype.step = function (i) {
-        console.log("========= round: " + i + " =========");
+        console.log("Round: " + i);
         var event = this.scheduler.next();
         var events = event.execute();
         this.scheduler.schedule(events);

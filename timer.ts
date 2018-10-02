@@ -7,7 +7,7 @@ export default class Timer {
         const delta = amount - this.global
         queue[index] = (queue[index] || 0) + delta
 
-        console.log(`global time: ${this.global}, actual time: ${amount}`)
+        console.log(`[Global time: ${this.global} | Actual time: ${amount}]`)
 
         this.global += delta
     }
