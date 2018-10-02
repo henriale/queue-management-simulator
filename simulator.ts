@@ -17,7 +17,7 @@ export class Simulator {
         console.log(`Round: ${i}`)
 
         const event = this.scheduler.next()
-        const events = event.execute()
+        const events = event.execute(this.queues)
         this.scheduler.schedule(events)
 
         console.log()
@@ -45,7 +45,7 @@ export class Simulator {
         for (let queue of queues) {
             parsed.push(new Queue(
                 queue.servers,
-                queue.capacity,
+                queue.capacity || Infinity,
                 queue.name,
                 queue.wires.arrivals,
                 queue.wires.leavings,

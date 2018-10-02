@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var Queue = /** @class */ (function () {
     function Queue(servers, capacity, name, input, output, detinations) {
         this.capacity = capacity - servers;
-        this.detinations = detinations;
+        this.destinations = detinations;
         this.servers = servers;
         this.output = output;
         this.input = input;
@@ -25,6 +25,9 @@ var Queue = /** @class */ (function () {
     Queue.prototype.isThereIdleServers = function () {
         return this.size <= this.servers;
     };
+    Queue.prototype.hasArrival = function () {
+        return !!this.input;
+    };
     Queue.prototype.empty = function () {
         return this.size < this.servers;
     };
@@ -39,6 +42,12 @@ var Queue = /** @class */ (function () {
     };
     Queue.prototype.getOutput = function () {
         return this.output;
+    };
+    Queue.prototype.getDestinations = function () {
+        return this.destinations;
+    };
+    Queue.prototype.getDestination = function (index) {
+        return this.destinations[index];
     };
     return Queue;
 }());

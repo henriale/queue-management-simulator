@@ -13,12 +13,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var random_1 = require("./random");
 var timer_1 = require("./timer");
 var E = /** @class */ (function () {
-    function E(time, queue) {
+    function E(time, origin, destination) {
         this.time = time;
-        this.queue = queue;
+        this.origin = origin;
+        this.destination = destination;
     }
     E.prototype.clock = function () {
-        timer_1.default.increase(this.queue.getName(), this.time, this.queue.getSize());
+        timer_1.default.increase(this.origin.getName(), this.time, this.origin.getSize());
     };
     E.prototype.outOfRandoms = function () {
         if (random_1.PseudoRandom.numbers.length < 2) {
@@ -36,7 +37,7 @@ var ArrivalFactory = /** @class */ (function () {
         var input = queue.getInput();
         var random = random_1.PseudoRandom.gen(input.from, input.to);
         var time = timer_1.default.getGlobal() + random;
-        console.log("Scheduling an arrival to " + time);
+        console.log(queue.getName() + ": Scheduling an arrival to " + time.toFixed(4));
         return new Arrival(time, queue);
     };
     return ArrivalFactory;
@@ -48,35 +49,56 @@ var LeavingFactory = /** @class */ (function () {
         var output = queue.getOutput();
         var random = random_1.PseudoRandom.gen(output.from, output.to);
         var time = timer_1.default.getGlobal() + random;
-        console.log("Scheduling a leaving to " + time);
+        console.log(queue.getName() + ": Scheduling a leaving to " + time.toFixed(4));
         return new Leaving(time, queue);
     };
     return LeavingFactory;
+}());
+var ForwardFactory = /** @class */ (function () {
+    function ForwardFactory() {
+    }
+    ForwardFactory.create = function (queue, queues, destinationName) {
+        if (!destinationName) {
+            return LeavingFactory.create(queue);
+        }
+        var destination = destinationFromName(queues, destinationName);
+        var output = queue.getOutput();
+        var random = random_1.PseudoRandom.gen(output.from, output.to);
+        var time = timer_1.default.getGlobal() + random;
+        console.log(queue.getName() + ": Scheduling a forward to " + time.toFixed(4));
+        return new Forward(time, queue, destination);
+    };
+    return ForwardFactory;
 }());
 var Arrival = /** @class */ (function (_super) {
     __extends(Arrival, _super);
     function Arrival() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    Arrival.prototype.execute = function () {
+    Arrival.prototype.execute = function (queues) {
+        var origin = this.origin;
         this.clock();
-        console.log("Arrival at " + timer_1.default.getGlobal());
+        console.log("Arrival at " + timer_1.default.getGlobal().toFixed(4) + " in " + origin.getName());
         if (this.outOfRandoms()) {
             return [];
         }
-        var queue = this.queue;
-        if (queue.isFull()) {
-            return [ArrivalFactory.create(queue)];
+        if (origin.isFull()) {
+            return [ArrivalFactory.create(origin)];
         }
-        queue.enqueue();
-        if (queue.isThereIdleServers()) {
+        origin.enqueue();
+        if (!origin.isThereIdleServers()) {
             return [
-                LeavingFactory.create(queue),
-                ArrivalFactory.create(queue)
+                ArrivalFactory.create(origin)
             ];
         }
+        var probability = random_1.PseudoRandom.gen(0, 1);
+        var destination = origin.getDestination(0);
+        if (destination.probability <= probability) {
+            destination = origin.getDestination(1);
+        }
         return [
-            ArrivalFactory.create(queue)
+            ForwardFactory.create(origin, queues, destination.name),
+            ArrivalFactory.create(origin)
         ];
     };
     return Arrival;
@@ -87,20 +109,71 @@ var Leaving = /** @class */ (function (_super) {
     function Leaving() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    Leaving.prototype.execute = function () {
+    Leaving.prototype.execute = function (queues) {
+        var origin = this.origin;
         this.clock();
-        console.log("Leaving at " + timer_1.default.getGlobal());
+        console.log("Leaving at " + timer_1.default.getGlobal().toFixed(4) + " in " + origin.getName());
         if (this.outOfRandoms()) {
             return [];
         }
-        var queue = this.queue;
-        queue.dequeue();
-        if (!queue.isAllServersBusy()) {
+        origin.dequeue();
+        if (!origin.isAllServersBusy()) {
             return [];
         }
-        return [LeavingFactory.create(queue)];
+        return [LeavingFactory.create(origin)];
     };
     return Leaving;
 }(E));
 exports.Leaving = Leaving;
+var Forward = /** @class */ (function (_super) {
+    __extends(Forward, _super);
+    function Forward() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Forward.prototype.execute = function (queues) {
+        var origin = this.origin;
+        this.clock();
+        console.log("Forward at " + timer_1.default.getGlobal().toFixed(4) + " in " + origin.getName());
+        if (this.outOfRandoms()) {
+            return [];
+        }
+        var events = [];
+        origin.dequeue();
+        if (origin.isAllServersBusy()) {
+            var probability = random_1.PseudoRandom.gen(0, 1);
+            var destination_1 = origin.getDestination(0);
+            if (destination_1.probability <= probability) {
+                destination_1 = origin.getDestination(1);
+            }
+            console.log("   -> to: " + destination_1.name);
+            events.push(ForwardFactory.create(origin, queues, destination_1.name));
+        }
+        var destination = this.destination;
+        destination.enqueue();
+        console.log("   -> to: " + destination.getName());
+        if (!destination.isThereIdleServers()) {
+            return [];
+        }
+        events.push(LeavingFactory.create(destination));
+        return events;
+        // const probability = PseudoRandom.gen(0, 1)
+        // let destination = origin.getDestination(0)
+        //
+        // if (destination.probability <= probability) {
+        //     destination = origin.getDestination(1)
+        // }
+        //
+        // return [
+        //     ForwardFactory.create(origin, queues, destination.name),
+        //     ArrivalFactory.create(origin)
+        // ]
+    };
+    return Forward;
+}(E));
+exports.Forward = Forward;
+function destinationFromName(queues, destinationName) {
+    return queues.filter(function (q) {
+        return q.getName() === destinationName;
+    })[0];
+}
 //# sourceMappingURL=events.js.map

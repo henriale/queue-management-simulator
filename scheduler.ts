@@ -1,4 +1,4 @@
-import {E} from "./events";
+import {E} from "./events"
 
 export class Scheduler {
     private events: E[] = []

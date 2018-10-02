@@ -13,7 +13,7 @@ var Simulator = /** @class */ (function () {
     Simulator.prototype.step = function (i) {
         console.log("Round: " + i);
         var event = this.scheduler.next();
-        var events = event.execute();
+        var events = event.execute(this.queues);
         this.scheduler.schedule(events);
         console.log();
     };
@@ -39,7 +39,7 @@ var Simulator = /** @class */ (function () {
         var parsed = [];
         for (var _i = 0, queues_1 = queues; _i < queues_1.length; _i++) {
             var queue = queues_1[_i];
-            parsed.push(new queue_1.Queue(queue.servers, queue.capacity, queue.name, queue.wires.arrivals, queue.wires.leavings, queue.wires.destinations));
+            parsed.push(new queue_1.Queue(queue.servers, queue.capacity || Infinity, queue.name, queue.wires.arrivals, queue.wires.leavings, queue.wires.destinations));
         }
         return parsed;
     };

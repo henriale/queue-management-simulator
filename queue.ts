@@ -5,11 +5,18 @@ export class Queue {
     private name: string
     private input: {from: number, to: number}
     private output: {from: number, to: number}
-    private detinations: {}[]
+    private destinations: {probability: number, name: string}[]
 
-    constructor(servers: number, capacity: number, name: string, input: {from: number, to: number}, output: {from: number, to: number}, detinations: {}[]) {
+    constructor(
+        servers: number,
+        capacity: number,
+        name: string,
+        input: {from: number, to: number} | undefined,
+        output: {from: number, to: number},
+        detinations: {probability: number, name: string}[]
+    ) {
         this.capacity = capacity - servers
-        this.detinations = detinations
+        this.destinations = detinations
         this.servers = servers
         this.output = output
         this.input = input
@@ -37,6 +44,10 @@ export class Queue {
         return this.size <= this.servers
     }
 
+    hasArrival(): boolean {
+        return !! this.input
+    }
+
     empty() {
         return this.size < this.servers
     }
@@ -55,6 +66,14 @@ export class Queue {
 
     getOutput() {
         return this.output
+    }
+
+    getDestinations() {
+        return this.destinations
+    }
+
+    getDestination(index: number) {
+        return this.destinations[index]
     }
 }
 
