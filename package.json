@@ -1,0 +1,20 @@
+{
+  "name": "queueing-simulator",
+  "version": "1.0.0",
+  "description": "T1 SMA",
+  "main": "simulator.js",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/chai": "^4.1.5",
+    "@types/mocha": "^5.2.5",
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "ts-node": "^7.0.1",
+    "typings": "^2.1.1"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "",
+  "license": "ISC"
+}
