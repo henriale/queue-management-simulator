@@ -16,7 +16,7 @@ The config file has the following structure:
         - `leavings`: Range of time for leavings
         - `destinations`: Array of destinations and probabilities of leavings
             - `probability`: number from 0 to 1
-            - `name`: **(not mandatory)**
+            - `name`: The queue name that will be forwarded **(not mandatory)**
 - `initial`: This is an array of events that will be created along with the scheduler
     - `queue`: The queue name
     - `time`: The time the event will run
