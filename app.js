@@ -8,7 +8,7 @@ for (var i = 1; !sim.ended(); i++) {
     sim.step(i);
 }
 console.log("=========== REPORT ===========");
-var totalTime = timer_1.default.getGlobal();
+var totalTime = timer_1.default.getTotal();
 console.log("Execution time: " + totalTime.toFixed(4) + "\n");
 var queues = timer_1.default.getQueues();
 for (var key in queues) {

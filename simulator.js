@@ -8,7 +8,7 @@ var Simulator = /** @class */ (function () {
     function Simulator(queues, initials, randoms) {
         this.queues = this.parseQueues(queues);
         this.scheduler = new scheduler_1.Scheduler(this.parseFirstArrivals(initials));
-        random_1.PseudoRandom.init(randoms);
+        random_1.RandomFactory.create(randoms);
     }
     Simulator.prototype.step = function (i) {
         console.log("Round: " + i);

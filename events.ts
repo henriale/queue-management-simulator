@@ -1,28 +1,24 @@
 import {Queue} from "./queue";
 import {PseudoRandom} from "./random";
-import Timer from "./timer";
+import TimeLogger from "./timer";
 
 export abstract class E {
-    protected origin: Queue
+    protected queue: Queue
     protected destination: Queue
-    time: number
+    protected time: number
 
-    constructor(time: number, origin: Queue, destination?: Queue) {
+    constructor(time: number, queue: Queue, destination?: Queue) {
         this.time = time
-        this.origin = origin
+        this.queue = queue
         this.destination = destination
     }
 
     protected clock() {
-        Timer.increase(this.origin.getName(), this.time, this.origin.getSize())
+        TimeLogger.increase(this.queue.getName(), this.getTime(), this.queue.getSize())
     }
 
-    outOfRandoms(): boolean {
-        if (PseudoRandom.numbers.length < 2) {
-            return true
-        }
-
-        return false
+    public getTime() {
+        return this.time
     }
 
     abstract execute(queues: Queue[]): E[]
@@ -32,7 +28,7 @@ class ArrivalFactory {
     static create(queue: Queue): Arrival {
         const input = queue.getInput()
         const random = PseudoRandom.gen(input.from, input.to)
-        const time = Timer.getGlobal() + random
+        const time = TimeLogger.getTotal() + random
 
         console.log(`${queue.getName()}: Scheduling an arrival to ${time.toFixed(4)}`)
 
@@ -41,29 +37,34 @@ class ArrivalFactory {
 }
 
 class LeavingFactory {
-    static create(queue: Queue): Leaving {
-        const output = queue.getOutput()
-        const random = PseudoRandom.gen(output.from, output.to)
-        const time = Timer.getGlobal() + random
+    static create(queue: Queue, queues: Queue[], destinationName: string): Leaving {
+        if (! destinationName) {
+            return ForwentFactory.create(queue)
+        }
 
-        console.log(`${queue.getName()}: Scheduling a leaving to ${time.toFixed(4)}`)
+        const destination = destinationFromName(queues, destinationName)
 
-        return new Leaving(time, queue)
+        return ForwardFactory.create(queue, destination)
     }
 }
 
-
-class ForwardFactory {
-    static create(queue: Queue, queues: Queue[], destinationName: string): Forward | Leaving {
-        if (! destinationName) {
-            return LeavingFactory.create(queue)
-        }
-
-        const destination = destinationFromName(queues, destinationName);
-
+class ForwentFactory {
+    static create(queue: Queue): Forwent {
         const output = queue.getOutput()
         const random = PseudoRandom.gen(output.from, output.to)
-        const time = Timer.getGlobal() + random
+        const time = TimeLogger.getTotal() + random
+
+        console.log(`${queue.getName()}: Scheduling a leaving to ${time.toFixed(4)}`)
+
+        return new Forwent(time, queue)
+    }
+}
+
+class ForwardFactory {
+    static create(queue: Queue, destination: Queue): Forward {
+        const output = queue.getOutput()
+        const random = PseudoRandom.gen(output.from, output.to)
+        const time = TimeLogger.getTotal() + random
 
         console.log(`${queue.getName()}: Scheduling a forward to ${time.toFixed(4)}`)
 
@@ -71,90 +72,92 @@ class ForwardFactory {
     }
 }
 
+abstract class Leaving extends E {}
+
 export class Arrival extends E {
     execute(queues: Queue[]): E[] {
-        const origin: Queue = this.origin
+        const queue: Queue = this.queue
 
         this.clock();
-        console.log(`Arrival at ${Timer.getGlobal().toFixed(4)} in ${origin.getName()}`)
+        console.log(`Arrival at ${TimeLogger.getTotal().toFixed(4)} in ${queue.getName()}`)
 
-        if (this.outOfRandoms()) {
+        if (PseudoRandom.outOfNumbers()) {
             return []
         }
 
 
-        if (origin.isFull()) {
-            return [ArrivalFactory.create(origin)]
+        if (queue.isFull()) {
+            return [ArrivalFactory.create(queue)]
         }
 
-        origin.enqueue()
+        queue.enqueue()
 
-        if (! origin.isThereIdleServers()) {
+        if (! queue.isThereIdleServers()) {
             return [
-                ArrivalFactory.create(origin)
+                ArrivalFactory.create(queue)
             ]
         }
 
         const probability = PseudoRandom.gen(0, 1)
-        let destination = origin.getDestination(0)
+        let destination = queue.getDestination(0)
 
         if (destination.probability <= probability) {
-            destination = origin.getDestination(1)
+            destination = queue.getDestination(1)
         }
 
         return [
-            ForwardFactory.create(origin, queues, destination.name),
-            ArrivalFactory.create(origin)
+            LeavingFactory.create(queue, queues, destination.name),
+            ArrivalFactory.create(queue)
         ]
     }
 }
 
-export class Leaving extends E {
+export class Forwent extends Leaving {
     execute(queues: Queue[]): E[] {
-        const origin: Queue = this.origin
+        const queue: Queue = this.queue
 
         this.clock();
-        console.log(`Leaving at ${Timer.getGlobal().toFixed(4)} in ${origin.getName()}`)
+        console.log(`Leaving at ${TimeLogger.getTotal().toFixed(4)} in ${queue.getName()}`)
 
-        if (this.outOfRandoms()) {
+        if (PseudoRandom.outOfNumbers()) {
             return []
         }
 
-        origin.dequeue()
+        queue.dequeue()
 
-        if (! origin.isAllServersBusy()) {
+        if (! queue.isAllServersBusy()) {
             return []
         }
 
-        return [LeavingFactory.create(origin)]
+        return [ForwentFactory.create(queue)]
     }
 }
 
-export class Forward extends E {
+export class Forward extends Leaving {
     execute(queues: Queue[]): E[] {
-        const origin: Queue = this.origin
+        const queue: Queue = this.queue
 
         this.clock();
-        console.log(`Forward at ${Timer.getGlobal().toFixed(4)} in ${origin.getName()}`)
+        console.log(`Forward at ${TimeLogger.getTotal().toFixed(4)} in ${queue.getName()}`)
 
-        if (this.outOfRandoms()) {
+        if (PseudoRandom.outOfNumbers()) {
             return []
         }
 
         const events = []
-        origin.dequeue()
+        queue.dequeue()
 
-        if (origin.isAllServersBusy()) {
+        if (queue.isAllServersBusy()) {
             const probability = PseudoRandom.gen(0, 1)
-            let destination = origin.getDestination(0)
+            let destination = queue.getDestination(0)
 
             if (destination.probability <= probability) {
-                destination = origin.getDestination(1)
+                destination = queue.getDestination(1)
             }
 
             console.log(`   -> to: ${destination.name}`)
 
-            events.push(ForwardFactory.create(origin, queues, destination.name))
+            events.push(LeavingFactory.create(queue, queues, destination.name))
         }
 
         const destination = this.destination
@@ -166,22 +169,9 @@ export class Forward extends E {
             return []
         }
 
-        events.push(LeavingFactory.create(destination))
+        events.push(ForwentFactory.create(destination))
 
         return events
-
-
-        // const probability = PseudoRandom.gen(0, 1)
-        // let destination = origin.getDestination(0)
-        //
-        // if (destination.probability <= probability) {
-        //     destination = origin.getDestination(1)
-        // }
-        //
-        // return [
-        //     ForwardFactory.create(origin, queues, destination.name),
-        //     ArrivalFactory.create(origin)
-        // ]
     }
 }
 

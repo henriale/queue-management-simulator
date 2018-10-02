@@ -19,7 +19,7 @@ var Scheduler = /** @class */ (function () {
         this.sort();
     };
     Scheduler.prototype.sort = function () {
-        this.events.sort(function (a, b) { return a.time > b.time ? 1 : -1; });
+        this.events.sort(function (a, b) { return a.getTime() > b.getTime() ? 1 : -1; });
     };
     Scheduler.prototype.empty = function () {
         return this.events.length === 0;

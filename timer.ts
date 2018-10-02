@@ -1,22 +1,22 @@
-export default class Timer {
-    private static global = 0
-    /*private*/ static queues = {}
+export default class TimeLogger {
+    private static total = 0
+    private static queues = {}
 
     static increase(queueName, amount, index) {
-        const queue = Timer.queues[queueName] = Timer.queues[queueName] || []
-        const delta = amount - this.global
+        const queue = TimeLogger.queues[queueName] = TimeLogger.queues[queueName] || []
+        const delta = amount - this.total
         queue[index] = (queue[index] || 0) + delta
 
-        console.log(`Prior time: ${this.global.toFixed(4)} | Actual time: ${amount.toFixed(4)}`)
+        console.log(`Prior time: ${this.total.toFixed(4)} | Actual time: ${amount.toFixed(4)}`)
 
-        this.global += delta
+        this.total += delta
     }
 
-    static getGlobal() {
-        return Timer.global
+    static getTotal() {
+        return TimeLogger.total
     }
 
     static getQueues() {
-        return Timer.queues
+        return TimeLogger.queues
     }
 }

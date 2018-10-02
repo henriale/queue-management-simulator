@@ -1,4 +1,4 @@
-import Timer from "./timer"
+import TimeLogger from "./timer"
 import {Simulator} from "./simulator"
 import * as config from "./configs/example2.json"
 
@@ -14,10 +14,10 @@ for (let i=1; ! sim.ended(); i++) {
 
 console.log("=========== REPORT ===========")
 
-const totalTime = Timer.getGlobal()
+const totalTime = TimeLogger.getTotal()
 console.log(`Execution time: ${totalTime.toFixed(4)}\n`)
 
-const queues = Timer.getQueues()
+const queues = TimeLogger.getQueues()
 
 for (let key in queues) {
     const queue = queues[key]

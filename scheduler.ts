@@ -24,7 +24,7 @@ export class Scheduler {
     }
 
     sort() {
-        this.events.sort((a, b) => a.time > b.time ? 1 : -1)
+        this.events.sort((a, b) => a.getTime() > b.getTime() ? 1 : -1)
     }
 
     empty() {

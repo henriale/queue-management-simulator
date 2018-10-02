@@ -1,7 +1,7 @@
 import {Queue} from "./queue"
 import {Arrival} from "./events"
 import {Scheduler} from "./scheduler"
-import {PseudoRandom} from "./random"
+import {RandomFactory} from "./random"
 
 export class Simulator {
     private queues: Queue[]
@@ -10,7 +10,7 @@ export class Simulator {
     constructor(queues, initials, randoms) {
         this.queues = this.parseQueues(queues)
         this.scheduler = new Scheduler(this.parseFirstArrivals(initials))
-        PseudoRandom.init(randoms)
+        RandomFactory.create(randoms)
     }
 
     step(i) {

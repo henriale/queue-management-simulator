@@ -1,24 +1,24 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var Timer = /** @class */ (function () {
-    function Timer() {
+var TimeLogger = /** @class */ (function () {
+    function TimeLogger() {
     }
-    Timer.increase = function (queueName, amount, index) {
-        var queue = Timer.queues[queueName] = Timer.queues[queueName] || [];
-        var delta = amount - this.global;
+    TimeLogger.increase = function (queueName, amount, index) {
+        var queue = TimeLogger.queues[queueName] = TimeLogger.queues[queueName] || [];
+        var delta = amount - this.total;
         queue[index] = (queue[index] || 0) + delta;
-        console.log("Prior time: " + this.global.toFixed(4) + " | Actual time: " + amount.toFixed(4));
-        this.global += delta;
+        console.log("Prior time: " + this.total.toFixed(4) + " | Actual time: " + amount.toFixed(4));
+        this.total += delta;
     };
-    Timer.getGlobal = function () {
-        return Timer.global;
+    TimeLogger.getTotal = function () {
+        return TimeLogger.total;
     };
-    Timer.getQueues = function () {
-        return Timer.queues;
+    TimeLogger.getQueues = function () {
+        return TimeLogger.queues;
     };
-    Timer.global = 0;
-    /*private*/ Timer.queues = {};
-    return Timer;
+    TimeLogger.total = 0;
+    TimeLogger.queues = {};
+    return TimeLogger;
 }());
-exports.default = Timer;
+exports.default = TimeLogger;
 //# sourceMappingURL=timer.js.map
